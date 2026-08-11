@@ -1,0 +1,52 @@
+services:
+  server:
+    build: ./server
+    container_name: monitor-server
+    restart: unless-stopped
+    ports:
+      - "9099:9099"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=9099
+      - CONTAMINATION=0.05
+      - BOOTSTRAP_N=600
+    networks:
+      - monitor-net
+
+  client-normal:
+    build: ./client
+    container_name: monitor-cliente-normal
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      - SERVER_HOST=server
+      - SERVER_PORT=9099
+      - CLIENT_ID=cliente-normal
+      - MODO=normal
+      - INTERVALO=3
+    mem_limit: 128m
+    cpus: 1.0
+    networks:
+      - monitor-net
+
+  client-carga:
+    build: ./client
+    container_name: monitor-cliente-carga
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      - SERVER_HOST=server
+      - SERVER_PORT=9099
+      - CLIENT_ID=cliente-carga
+      - MODO=carga
+      - INTERVALO=3
+    mem_limit: 128m
+    cpus: 1.0
+    networks:
+      - monitor-net
+
+networks:
+  monitor-net:
+    driver: bridge
