@@ -42,6 +42,40 @@ de CPU real** — no un valor simulado — y el modelo lo clasificó como anomal
 cadena completa (generar carga real → medirla vía cgroup → enviarla por socket → evaluarla con el
 modelo → responder) funciona correctamente.
 
+## Corrección posterior: falso positivo en client-normal dentro de Docker
+
+Al correr `docker compose up --build` de verdad (algo que este entorno de desarrollo no pudo hacer
+por no tener el daemon de Docker disponible), `client-normal` salía marcado como `ANOMALIA` en
+**todas** las lecturas, igual que `client-carga`. El log real fue:
+
+```
+cliente=cliente-normal cpu=0.1% mem=8.0% proc=1 net=1kbps -> ANOMALIA DETECTADA (score=-0.0411, 2.9 ms)
+cliente=cliente-carga  cpu=97.1% mem=78.8% proc=7 net=1kbps -> ANOMALIA DETECTADA (score=-0.1252, 4.5 ms)
+```
+
+**Causa:** el lote de entrenamiento (`generar_bootstrap_normal`) se había calibrado con una
+estimación genérica de "servidor liviano" (cpu≈5%, mem≈15%, ≈5 procesos, red≈3 kbps), pero un
+contenedor Python real en reposo, con `mem_limit: 128m` y PID namespace aislado, resultó ser aún
+más liviano de lo estimado: cpu≈0%, mem≈8%, **1 solo proceso**, red≈0.5 kbps. Como las cuatro
+métricas del cliente normal caían simultáneamente en la cola baja de la distribución de
+entrenamiento, Isolation Forest las aislaba con pocos cortes y las clasificaba como anómalas —un
+falso positivo por desajuste de calibración, no un error de arquitectura.
+
+**Corrección:** se recalibró `generar_bootstrap_normal` en `server/monitor_common.py` usando estos
+valores reales como centro de la distribución normal (cpu~N(1.0, 1.2), mem~N(9, 2.5), procesos
+mayormente 1, red~N(1.0, 1.0)). Se verificó con el propio `server.py` y los valores exactos del log:
+
+```
+cliente=cliente-normal cpu=0.1% mem=8.0% proc=1 net=1kbps -> normal (score=0.1452, 21.2 ms)
+cliente=cliente-carga  cpu=100.0% mem=81.6% proc=7 net=0kbps -> ANOMALIA DETECTADA (score=-0.1870, 27.7 ms)
+```
+
+Este episodio también es un buen ejemplo de una limitación real de Isolation Forest entrenado con
+un solo lote de arranque: si la distribución "normal" asumida no coincide con el entorno real de
+despliegue, el modelo produce falsos positivos sistemáticos hasta que se recalibra o se reentrena
+con datos reales — algo que vale la pena mencionar en la sección de análisis del informe si se
+actualiza más adelante.
+
 ## Pendiente de validar con Docker real
 
 No fue posible construir ni correr las imágenes de Docker dentro de este entorno de desarrollo
