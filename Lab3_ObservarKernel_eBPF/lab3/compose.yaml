@@ -1,0 +1,132 @@
+name: wordpress-ha-lab
+
+x-wordpress-identity: &wordpress_identity
+  APP_UID: "${WORDPRESS_UID:?Defina WORDPRESS_UID en el archivo .env}"
+  APP_GID: "${WORDPRESS_GID:?Defina WORDPRESS_GID en el archivo .env}"
+
+services:
+  mariadb:
+    image: mariadb:11.4
+    restart: unless-stopped
+
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: mi_base_de_datos
+      MARIADB_USER: usuario
+      MARIADB_PASSWORD: password
+
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+    networks:
+      - webnet
+
+    healthcheck:
+      test:
+        - CMD
+        - healthcheck.sh
+        - --connect
+        - --innodb_initialized
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --save
+      - "60"
+      - "1"
+
+    volumes:
+      - redis_data:/data
+
+    networks:
+      - webnet
+
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  web1: &wordpress_web
+    image: wordpress-ha-php:8.3
+
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+
+    restart: unless-stopped
+
+    volumes:
+      - /home/orh:/var/www/html
+
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    networks:
+      - webnet
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS http://127.0.0.1/wp-login.php >/dev/null || exit 1
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+    environment:
+      <<: *wordpress_identity
+      BACKEND_NAME: web1
+
+    hostname: web1
+
+  web2:
+    <<: *wordpress_web
+
+    environment:
+      <<: *wordpress_identity
+      BACKEND_NAME: web2
+
+    hostname: web2
+
+  haproxy:
+    image: haproxy:3.2-alpine
+    restart: unless-stopped
+
+    ports:
+      - "803:80"
+      - "8404:8404"
+
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+
+    depends_on:
+      - web1
+      - web2
+
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: bridge
+
+volumes:
+  mariadb_data:
+  redis_data:
