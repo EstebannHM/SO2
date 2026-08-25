@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  web1:
+    build: ./web
+    container_name: web1
+    networks:
+      - red-lab
+    ports:
+      - "8080:80"
+
+  web2:
+    build: ./web
+    container_name: web2
+    networks:
+      - red-lab
+    ports:
+      - "8082:80"
+
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    networks:
+      - red-lab
+    ports:
+      - "8000:80"
+      - "8443:443"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ./haproxy/certs:/usr/local/etc/haproxy/certs:ro
+    depends_on:
+      - web1
+      - web2
+
+networks:
+  red-lab:
+    driver: bridge
