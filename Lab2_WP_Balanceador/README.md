@@ -8,10 +8,6 @@ servido por dos réplicas web (`web1` y `web2`) balanceadas por HAProxy, con bas
 datos MariaDB, caché de objetos en Redis, y gestión dinámica de UID/GID mediante un
 `entrypoint` personalizado.
 
-> Las imágenes referenciadas en este documento deben ubicarse en la carpeta
-> `evidencias/` al mismo nivel que este archivo `.md`. Si usas otro nombre de carpeta,
-> ajusta las rutas de las imágenes en consecuencia.
-
 ---
 
 ## 1. Preparación del entorno
