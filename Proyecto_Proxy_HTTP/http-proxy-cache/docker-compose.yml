@@ -1,0 +1,58 @@
+services:
+
+  server1:
+    build: .
+    container_name: server1
+    command: ./server
+    environment:
+      SERVER_NAME: server1
+    networks:
+      - proxy-network
+
+  server2:
+    build: .
+    container_name: server2
+    command: ./server
+    environment:
+      SERVER_NAME: server2
+    networks:
+      - proxy-network
+
+  server3:
+    build: .
+    container_name: server3
+    command: ./server
+    environment:
+      SERVER_NAME: server3
+    networks:
+      - proxy-network
+
+  proxy1:
+    build: .
+    container_name: proxy1
+    command: ./proxy
+    ports:
+      - "9001:9000"
+    networks:
+      - proxy-network
+    depends_on:
+      - server1
+      - server2
+      - server3
+
+  haproxy:
+    image: haproxy:3.2
+    container_name: haproxy
+    ports:
+      - "8081:80"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks:
+      - proxy-network
+    depends_on:
+      - server1
+      - server2
+      - server3
+
+networks:
+  proxy-network:
