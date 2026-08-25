@@ -17,7 +17,7 @@ datos MariaDB, caché de objetos en Redis, y gestión dinámica de UID/GID media
 Se creó el usuario de sistema `orh`, propietario de `/home/orh`, que es el directorio
 compartido entre ambas réplicas web.
 
-![Creación de usuario orh y verificación de /home/orh](evidencias/crearPerfilyVerificarHome.png)
+![Creación de usuario orh y verificación de /home/orh](evidencias/crearPerfilyVerificarHome.PNG)
 
 ### 1.2 Protección del `.env` y descarga de WordPress
 
@@ -25,7 +25,7 @@ Se protegió el archivo `.env` (`chmod 600`) y se descargó WordPress directamen
 el usuario `orh`, aplicando después los permisos `750` para directorios y `640` para
 archivos.
 
-![Protección de .env y descarga de WordPress como orh](evidencias/protegerEnvyDescargarWP.png)
+![Protección de .env y descarga de WordPress como orh](evidencias/protegerEnvyDescargarWP.PNG)
 
 ---
 
@@ -37,7 +37,7 @@ Se construyó la imagen genérica `wordpress-ha-php:8.3` (compartida por `web1` 
 `web2`) y se levantaron todos los servicios: `mariadb`, `redis`, `web1`, `web2` y
 `haproxy`.
 
-![docker compose up -d levantando todos los servicios](evidencias/dockercomposeup.png)
+![docker compose up -d levantando todos los servicios](evidencias/dockercomposeup.PNG)
 
 ### 2.2 Verificación de identidades UID/GID dentro de los contenedores
 
@@ -45,7 +45,7 @@ Se confirmó que el usuario `www-data` dentro de ambos backends fue reasignado
 dinámicamente por el `entrypoint` al UID/GID `1003:1003`, coincidiendo con el
 propietario del bind mount `/home/orh` en el host.
 
-![Verificación de id www-data en web1 y web2, y logs del entrypoint](evidencias/verificaciondeidentidades.png)
+![Verificación de id www-data en web1 y web2, y logs del entrypoint](evidencias/verificaciondeidentidades.PNG)
 
 ---
 
@@ -57,14 +57,14 @@ Se accedió a `http://localhost:803` y se completó el asistente de instalación
 WordPress, configurando la conexión a la base de datos `mi_base_de_datos` en el host
 `mariadb`.
 
-![Pantalla inicial del instalador de WordPress](evidencias/instalarwp.png)
+![Pantalla inicial del instalador de WordPress](evidencias/instalarwp.PNG)
 
 ### 3.2 Panel de administración (Dashboard)
 
 Una vez completada la instalación, se accedió al panel de administración de
 WordPress.
 
-![Dashboard de WordPress ya instalado](evidencias/dashboardWP.png)
+![Dashboard de WordPress ya instalado](evidencias/dashboardWP.PNG)
 
 ---
 
@@ -74,7 +74,7 @@ Se instaló y activó el plugin **Redis Object Cache**, conectándolo al servici
 `redis` del stack. El estado de conexión confirma `Connected`, cliente `PhpRedis`, y
 sistema de archivos escribible.
 
-![Activación y estado de Redis Object Cache](evidencias/activarredis.png)
+![Activación y estado de Redis Object Cache](evidencias/activarredis.PNG)
 
 ---
 
@@ -97,7 +97,7 @@ backends quedaran disponibles incluso antes de finalizar la instalación de Word
 Tras el ajuste, el panel de estadísticas de HAProxy (`http://localhost:8404/stats`)
 muestra `web1` y `web2` en estado `UP`.
 
-![Panel de estadísticas de HAProxy con web1 y web2 en verde/UP](evidencias/statspuertomuestraup.png)
+![Panel de estadísticas de HAProxy con web1 y web2 en verde/UP](evidencias/statspuertomuestraup.PNG)
 
 ---
 
@@ -109,7 +109,7 @@ Se realizaron 10 solicitudes consecutivas con `curl`, cada una con `Connection:
 close` para forzar una nueva conexión TCP, confirmando la alternancia `roundrobin`
 entre `web1` y `web2`.
 
-![10 solicitudes alternando entre web1 y web2](evidencias/pruebaBalanzaCarga.png)
+![10 solicitudes alternando entre web1 y web2](evidencias/pruebaBalanzaCarga.PNG)
 
 ### 6.2 Comprobación visual mediante el indicador de backend
 
@@ -120,11 +120,11 @@ sin pérdida de la sesión autenticada.
 
 **Backend web1:**
 
-![Barra de administración indicando Backend: web1](evidencias/backend1.png)
+![Barra de administración indicando Backend: web1](evidencias/backend1.PNG)
 
 **Backend web2:**
 
-![Barra de administración indicando Backend: web2](evidencias/backend2.png)
+![Barra de administración indicando Backend: web2](evidencias/backend2.PNG)
 
 ---
 
