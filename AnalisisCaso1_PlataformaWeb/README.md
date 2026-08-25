@@ -156,7 +156,7 @@ Se definió un `docker-compose.yml` que declara los tres servicios de la platafo
 
 ### 5.2 Diagrama de arquitectura
 
-![Diagrama de arquitectura: cliente, HAProxy y los dos contenedores web dentro de la red red-lab](evidencias/19-diagrama-arquitectura.PNG)
+![Diagrama de arquitectura: cliente, HAProxy y los dos contenedores web dentro de la red red-lab](evidencias/19-diagrama-arquitectura.png)
 
 El diagrama resume el flujo completo: el cliente accede por los puertos 8000/8443, HAProxy balancea el tráfico hacia `web1` y `web2`, ambos dentro de la red Docker `red-lab`.
 
